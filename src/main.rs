@@ -95,7 +95,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     let surface = compositor.create_surface(&qh);
     // And then we create the layer shell.
     let layer =
-        layer_shell.create_layer_surface(&qh, surface, Layer::Top, Some("rcrosshair"), None);
+        layer_shell.create_layer_surface(&qh, surface, Layer::Overlay, Some("rcrosshair"), None);
     // Configure the layer surface, providing things like the anchor on screen, desired size and the keyboard
     // interactivity
     let region = Region::new(&compositor)?;
