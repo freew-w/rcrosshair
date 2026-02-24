@@ -138,7 +138,6 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         event_queue.blocking_dispatch(&mut rcrosshair)?;
 
         if rcrosshair.exit {
-            println!("exiting example");
             break;
         }
     }
