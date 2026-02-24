@@ -5,7 +5,7 @@ use smithay_client_toolkit::{
     registry::RegistryState,
     shell::{
         WaylandSurface,
-        wlr_layer::{LayerShellHandler, LayerSurface, LayerSurfaceConfigure},
+        wlr_layer::{Anchor, LayerShellHandler, LayerSurface, LayerSurfaceConfigure},
     },
     shm::{
         Shm, ShmHandler,
@@ -32,6 +32,9 @@ pub struct App {
     pub layer: LayerSurface,
 
     pub image: CrosshairImage,
+    pub target_x: u32,
+    pub target_y: u32,
+    pub positioned: bool,
 }
 
 impl CompositorHandler for App {
@@ -164,7 +167,25 @@ impl LayerShellHandler for App {
         self.width = new_w;
         self.height = new_h;
 
+        if let Some(output) = self.output_state.outputs().next()
+            && let Some(info) = self.output_state.info(&output)
+        {
+            let (screen_w, screen_h) = info.logical_size.unwrap_or((1920, 1080));
+
+            let left_margin = (screen_w / 2) - self.target_x as i32;
+            let top_margin = (screen_h / 2) - self.target_y as i32;
+
+            self.layer.set_anchor(Anchor::TOP | Anchor::LEFT);
+            self.layer.set_margin(top_margin, 0, 0, left_margin);
+            self.positioned = true;
+            self.layer.commit();
+        }
+
         if self.first_configure || size_changed {
+            if !self.positioned {
+                self.layer.commit();
+            }
+
             self.first_configure = false;
             if let Err(e) = self.draw(qh) {
                 log::error!("Draw failed after configure: {}", e);

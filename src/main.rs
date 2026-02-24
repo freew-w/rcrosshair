@@ -9,7 +9,7 @@ use smithay_client_toolkit::{
     registry_handlers,
     shell::{
         WaylandSurface,
-        wlr_layer::{Anchor, KeyboardInteractivity, Layer, LayerShell},
+        wlr_layer::{KeyboardInteractivity, Layer, LayerShell},
     },
     shm::{Shm, slot::SlotPool},
 };
@@ -24,7 +24,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     // Load the image
     let args = std::env::args().collect::<Vec<String>>();
-    if args.len() == 1 {
+    if args.len() != 2 && args.len() != 4 {
         return Err("Invalid arguments".into());
     }
 
@@ -105,7 +105,6 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     layer.set_exclusive_zone(-1);
     layer.set_keyboard_interactivity(KeyboardInteractivity::None);
-    layer.set_anchor(Anchor::TOP | Anchor::RIGHT | Anchor::BOTTOM | Anchor::LEFT);
     layer.set_size(image_w, image_h);
 
     // In order for the layer surface to be mapped, we need to perform an initial commit with no attached\
@@ -116,6 +115,14 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     layer.commit();
 
     let pool = SlotPool::new((image_w * image_h * 4) as usize, &shm)?;
+    let target_x = args
+        .get(2)
+        .and_then(|s| s.parse::<u32>().ok())
+        .unwrap_or(image_w / 2); // Default to image center
+    let target_y = args
+        .get(3)
+        .and_then(|s| s.parse::<u32>().ok())
+        .unwrap_or(image_h / 2); // Default to image center
     let mut rcrosshair = App {
         // Seats and outputs may be hotplugged at runtime, therefore we need to setup a registry state to
         // listen for seats and outputs.
@@ -131,6 +138,9 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         layer,
 
         image,
+        target_x,
+        target_y,
+        positioned: false,
     };
 
     // We don't draw immediately, the configure will notify us when to first draw.
