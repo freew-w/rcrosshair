@@ -1,4 +1,5 @@
 use app::*;
+use clap::Parser;
 use crosshair::*;
 use image::{AnimationDecoder, ImageDecoder, ImageFormat, codecs::gif::GifDecoder};
 use smithay_client_toolkit::{
@@ -19,17 +20,26 @@ use wayland_client::{Connection, globals::registry_queue_init};
 mod app;
 mod crosshair;
 
+#[derive(Parser)]
+struct Args {
+    image_path: String,
+
+    /// The x coordinate on the image to be centered
+    #[arg(short = 'x', long)]
+    target_x: Option<u32>,
+
+    /// The y coordinate on the image to be centered
+    #[arg(short = 'y', long)]
+    target_y: Option<u32>,
+}
+
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     env_logger::init();
 
     // Load the image
-    let args = std::env::args().collect::<Vec<String>>();
-    if args.len() != 2 && args.len() != 3 && args.len() != 4 {
-        println!("Usage: rcrosshair <IMAGE_PATH> [TARGET_X] [TARGET_Y]");
-        return Err("Invalid arguments".into());
-    }
+    let args = Args::parse();
 
-    let image_path = &args[1];
+    let image_path = &args.image_path;
     let image_reader = image::ImageReader::open(image_path)?;
     let format = image_reader.format().ok_or("Failed to read image format")?;
 
@@ -116,14 +126,8 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     layer.commit();
 
     let pool = SlotPool::new((image_w * image_h * 4) as usize, &shm)?;
-    let target_x = args
-        .get(2)
-        .and_then(|s| s.parse::<u32>().ok())
-        .unwrap_or(image_w / 2); // Default to image center
-    let target_y = args
-        .get(3)
-        .and_then(|s| s.parse::<u32>().ok())
-        .unwrap_or(image_h / 2); // Default to image center
+    let target_x = args.target_x.unwrap_or(image_w / 2);
+    let target_y = args.target_y.unwrap_or(image_h / 2);
     let mut rcrosshair = App {
         // Seats and outputs may be hotplugged at runtime, therefore we need to setup a registry state to
         // listen for seats and outputs.
