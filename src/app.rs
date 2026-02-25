@@ -235,15 +235,8 @@ impl App {
                     .wl_surface()
                     .frame(qh, self.layer.wl_surface().clone());
             }
-            CrosshairImage::Static(ref image) => {
-                // Copy crosshair pixels (simple blit, no scaling)
-                for y in 0..height {
-                    for x in 0..width {
-                        let idx = ((y * width + x) * 4) as usize;
-                        let [r, g, b, a] = image.get_pixel(x, y).0;
-                        canvas[idx..idx + 4].copy_from_slice(&[b, g, r, a]);
-                    }
-                }
+            CrosshairImage::Static(ref frame) => {
+                canvas[..frame.data.len()].copy_from_slice(&frame.data);
             }
         }
 

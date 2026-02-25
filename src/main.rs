@@ -1,7 +1,10 @@
 use app::*;
 use clap::Parser;
 use crosshair::*;
-use image::{AnimationDecoder, ImageDecoder, ImageFormat, codecs::gif::GifDecoder};
+use image::{
+    AnimationDecoder, GenericImageView, ImageDecoder, ImageFormat, RgbaImage,
+    codecs::gif::GifDecoder,
+};
 use smithay_client_toolkit::{
     compositor::{CompositorState, Region},
     delegate_compositor, delegate_layer, delegate_output, delegate_registry, delegate_shm,
@@ -31,6 +34,29 @@ struct Args {
     /// The y coordinate on the image to be centered
     #[arg(short = 'y', long)]
     target_y: Option<u32>,
+
+    /// range from 0 to 1
+    #[arg(short, long, default_value_t = 1f32)]
+    opacity: f32,
+}
+
+fn process_buffer(buffer: RgbaImage, opacity: f32) -> Vec<u8> {
+    let (w, h) = buffer.dimensions();
+    let mut data = Vec::with_capacity((w * h * 4) as usize);
+
+    for pixel in buffer.pixels() {
+        let [r, g, b, a] = pixel.0;
+
+        // Calculate the premultiplied alpha
+        let alpha_f = (a as f32 * opacity) / 255f32;
+        let new_a = (a as f32 * opacity) as u8;
+        let new_r = (r as f32 * alpha_f) as u8;
+        let new_g = (g as f32 * alpha_f) as u8;
+        let new_b = (b as f32 * alpha_f) as u8;
+
+        data.extend_from_slice(&[new_b, new_g, new_r, new_a]);
+    }
+    data
 }
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {
@@ -56,12 +82,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
                 .map(|frame| {
                     let delay_ms = frame.delay().numer_denom_ms().0 as u128;
                     let buffer = frame.into_buffer();
-                    let mut data = Vec::with_capacity((w * h * 4) as usize);
-
-                    for pixel in buffer.pixels() {
-                        let [r, g, b, a] = pixel.0;
-                        data.extend_from_slice(&[b, g, r, a]);
-                    }
+                    let data = process_buffer(buffer, args.opacity);
 
                     GifFrame { data, delay_ms }
                 })
@@ -78,11 +99,11 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
             )
         }
         _ => {
-            let image = image_reader.decode()?.into_rgba8();
-            let w = image.width();
-            let h = image.height();
+            let image = image_reader.decode()?;
+            let (w, h) = image.dimensions();
+            let data = process_buffer(image.to_rgba8(), args.opacity);
 
-            (w, h, CrosshairImage::Static(image))
+            (w, h, CrosshairImage::Static(Frame { data }))
         }
     };
 

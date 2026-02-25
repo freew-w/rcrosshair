@@ -1,9 +1,12 @@
-use image::{ImageBuffer, Rgba};
 use std::time::Instant;
 
 pub struct GifFrame {
     pub data: Vec<u8>,
     pub delay_ms: u128,
+}
+
+pub struct Frame {
+    pub data: Vec<u8>,
 }
 
 pub struct GifImage {
@@ -13,6 +16,6 @@ pub struct GifImage {
 }
 
 pub enum CrosshairImage {
-    Static(ImageBuffer<Rgba<u8>, Vec<u8>>),
+    Static(Frame),
     Gif(GifImage),
 }
