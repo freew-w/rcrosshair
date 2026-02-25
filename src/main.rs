@@ -24,7 +24,8 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     // Load the image
     let args = std::env::args().collect::<Vec<String>>();
-    if args.len() != 2 && args.len() != 4 {
+    if args.len() != 2 && args.len() != 3 && args.len() != 4 {
+        println!("Usage: rcrosshair <IMAGE_PATH> [TARGET_X] [TARGET_Y]");
         return Err("Invalid arguments".into());
     }
 
