@@ -203,9 +203,9 @@ impl ShmHandler for App {
 #[derive(Debug, Error)]
 enum DrawError {
     #[error("Failed to create buffer: {0}")]
-    CreateBufferError(#[from] CreateBufferError),
+    CreateBuffer(#[from] CreateBufferError),
     #[error("Failed to activate slot: {0}")]
-    ActivateSlotError(#[from] ActivateSlotError),
+    ActivateSlot(#[from] ActivateSlotError),
 }
 
 impl App {
