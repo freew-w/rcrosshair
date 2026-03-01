@@ -3,8 +3,12 @@ Display custom images or GIFs as crosshair overlay on wlroots compositors
 
 ## Usage
 ```bash
-~ rcrosshair --help
-Usage: rcrosshair [OPTIONS] <IMAGE_PATH>
+~ rcrosshair help
+Usage: rcrosshair [OPTIONS] <IMAGE_PATH> [COMMAND]
+
+Commands:
+  clear  Clear cached parameters for an image
+  help   Print this message or the help of the given subcommand(s)
 
 Arguments:
   <IMAGE_PATH>  
@@ -39,4 +43,7 @@ rcrosshair images/example.png -x 192 -y 42 -o 0.5
 # The same goes for GIFs
 rcrosshair images/example.gif
 rcrosshair images/example.gif -x 192 -y 42 -o 0.5
+
+# Clear cached parameters for an image
+rcrosshair images/example.png clear
 ```
