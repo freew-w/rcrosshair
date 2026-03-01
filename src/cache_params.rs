@@ -1,5 +1,5 @@
 use blake3::Hasher;
-use clap::Parser;
+use clap::{Parser, Subcommand};
 use serde::{Deserialize, Serialize};
 use std::{
     collections::HashMap,
@@ -23,6 +23,15 @@ pub struct Args {
     /// range from 0 to 1
     #[arg(short, long)]
     pub opacity: Option<f32>,
+
+    #[command(subcommand)]
+    pub command: Option<Commands>,
+}
+
+#[derive(Subcommand, PartialEq)]
+pub enum Commands {
+    /// Clear cached parameters for an image
+    Clear,
 }
 
 #[derive(Serialize, Deserialize, Default)]
@@ -30,7 +39,7 @@ pub struct Cache {
     pub history: HashMap<String, CachedParams>,
 }
 
-#[derive(Serialize, Deserialize)]
+#[derive(Serialize, Deserialize, Debug)]
 pub struct CachedParams {
     pub path_for_readability: String,
     pub target_x: u32,

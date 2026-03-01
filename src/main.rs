@@ -34,6 +34,16 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     let mut cache = load_cache(&cache_path);
     let cache_entry = cache.history.get(&image_hash);
 
+    if Some(Commands::Clear) == args.command {
+        match cache.history.remove(&image_hash) {
+            Some(v) => println!("Removed cached parameters: {:?}", v),
+            None => println!("Cached parameters not found, nothing was removed"),
+        }
+        save_cache(&cache_path, &cache)?;
+
+        return Ok(());
+    };
+
     let opacity = args
         .opacity
         .or(cache_entry.map(|e| e.opacity))
